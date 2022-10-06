@@ -1,0 +1,131 @@
+'Allow for Script to run across all sheets of workbook
+Sub Dosomething()
+    Dim xSh As Worksheet
+    Application.ScreenUpdating = False
+    For Each xSh In Worksheets
+        xSh.Select
+        Call StockTicker
+    Next
+    Application.ScreenUpdating = True
+End Sub
+
+
+Sub StockTicker()
+
+
+'Declare Variables
+Dim Symbol As String
+Dim Year_Open As Double
+Dim Year_Close As Double
+Dim Yearly_Change As Double
+Dim Percent_Change
+Dim VolSum As LongLong
+Dim lastrow As Long
+Dim k As Long
+Dim I As Long
+Dim j As Integer
+Dim PrintCounter As Integer
+Dim lastrowout As Integer
+
+Dim Greatest_Rise As Double
+Dim Greatest_Fall As Double
+Dim Greatest_Vol As LongLong
+
+
+'Deterimne number of rows
+lastrow = Cells(Rows.Count, "A").End(xlUp).Row
+
+'Initialize Variables
+VolSum = 0
+PrintCounter = 2
+k = 2
+Greatest_Rise = 0
+Greatest_Fall = 0
+Greatest_Vol = 0
+
+'Create Output Headers
+Cells(1, 9) = "Ticker"
+Cells(1, 10) = "Yearly Change"
+Cells(1, 11) = "Percent Change"
+Cells(1, 12) = "Total Yearly Volume"
+Cells(2, 14) = "Greatest Percent Rise"
+Cells(3, 14) = "Greatest Percent Fall"
+Cells(4, 14) = "Greatest Volume"
+Cells(1, 15) = "Ticker"
+Cells(1, 16) = "Value"
+
+
+
+'Loop Though Rows
+For I = 2 To lastrow
+    
+    'Check if data is for same Stock Ticker and Running count of volume
+    If Cells(I, 1) = Cells(I + 1, 1) Then
+          VolSum = VolSum + Cells(I, 7)
+        
+       
+    'New stock scenario;For old stock determine yearly open,close, change and percent change ;print values;update counters
+     Else
+        
+        Year_Open = Cells(k, 3)
+        VolSum = VolSum + Cells(I, 7)
+        Year_Close = Cells(I, 6)
+        Yearly_Change = Year_Close - Year_Open
+        Percent_Change = Yearly_Change / Year_Open * 100
+        Cells(PrintCounter, 9) = Cells(I, 1)
+        Cells(PrintCounter, 10) = Yearly_Change
+        Cells(PrintCounter, 11) = Percent_Change
+        Cells(PrintCounter, 12) = VolSum
+        VolSum = 0
+        PrintCounter = PrintCounter + 1
+        k = I + 1
+       
+       
+   End If
+   Next I
+   
+    
+'Deterimne number of rows in output data
+lastrowout = Cells(Rows.Count, "I").End(xlUp).Row
+
+'Loop through output data
+For j = 2 To lastrowout
+
+
+    'Look to see if percent change is negative and set cell color to red
+    If Cells(j, 10) < 0 Then
+        Cells(j, 10).Interior.ColorIndex = 3
+    
+    'Look to see if percent change is positive and set cell color to green
+    Else: If Cells(j, 10) > 0 Then Cells(j, 10).Interior.ColorIndex = 4
+    
+    End If
+    'Look to see if percent change is the greatest value and if so set tracking valubale and print data
+    If Cells(j, 11) > Greatest_Rise Then
+        Greatest_Rise = Cells(j, 11)
+        Cells(2, 15) = Cells(j, 9)
+        Cells(2, 16) = Greatest_Rise
+    End If
+    
+    'Look to see if percent change is the greatest negative value and if so set tracking valubale and print data
+    If Cells(j, 11) < Greatest_Fall Then
+        Greatest_Fall = Cells(j, 11)
+        Cells(3, 15) = Cells(j, 9)
+        Cells(3, 16) = Greatest_Fall
+    End If
+    
+    'Look to see if total volume is the greatest value and if so set tracking valubale and print data
+    If Cells(j, 12) > Greatest_Vol Then
+        Greatest_Vol = Cells(j, 12)
+        Cells(4, 15) = Cells(j, 9)
+        Cells(4, 16) = Greatest_Vol
+    End If
+    
+      
+    Next j
+    
+
+        
+
+
+End Sub
